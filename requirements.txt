@@ -1,0 +1,4 @@
+flask
+requests
+playwright
+pandas

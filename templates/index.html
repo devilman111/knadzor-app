@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кибернадзор — МВД РК</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07090f; --bg2:#0c1018; --bg3:#111827;
+  --gold:#d4a017; --gold2:#f0c040; --gold3:#7a5a00;
+  --blue:#2563eb; --blue2:#3b82f6; --cyan:#06b6d4;
+  --green:#10b981; --red:#ef4444; --purple:#8b5cf6; --orange:#f97316;
+  --text:#f1f5f9; --text2:#94a3b8; --text3:#475569;
+  --border:rgba(212,160,23,0.12); --border2:rgba(212,160,23,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.bg::before{content:'';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(37,99,235,0.08),transparent 70%);top:-200px;right:-100px;}
+.bg::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(212,160,23,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(212,160,23,0.02) 1px,transparent 1px);background-size:48px 48px;}
+
+/* HEADER */
+.hdr{position:relative;z-index:10;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(7,9,15,0.97);border-bottom:1px solid var(--border2);}
+.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;}
+.hl{display:flex;align-items:center;gap:12px;}
+.hl-emb{width:44px;height:44px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#1a2a4a,#07090f);box-shadow:0 0 18px rgba(212,160,23,0.25);flex-shrink:0;}
+.hl-emb img{width:100%;height:100%;object-fit:cover;}
+.hl-t .t1{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#f0c040,#d4a017,#8a6010);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hl-t .t2{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:1px;}
+.hr{display:flex;align-items:center;gap:14px;}
+.badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;}
+.badge.idle{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#34d399;}
+.badge.running{background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);color:#06b6d4;}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.5s ease infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.clk{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold2);padding:5px 11px;background:rgba(212,160,23,.06);border:1px solid var(--border);border-radius:6px;letter-spacing:1px;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:290px 1fr;height:calc(100vh - 62px);position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sb{background:rgba(12,16,24,.98);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#7a5a00 transparent;}
+.sb-top{padding:20px 16px 16px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(212,160,23,.04),transparent);}
+.sb-emb{width:90px;height:90px;border-radius:50%;border:2px solid var(--gold);margin:0 auto 10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 40% 35%,#1a2a50,#07090f);box-shadow:0 0 0 7px rgba(212,160,23,.06),0 0 40px rgba(212,160,23,.18);animation:glow 4s ease infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 0 7px rgba(212,160,23,.06),0 0 40px rgba(212,160,23,.18)}50%{box-shadow:0 0 0 10px rgba(212,160,23,.1),0 0 60px rgba(212,160,23,.3)}}
+.sb-emb img{width:100%;height:100%;object-fit:contain;border-radius:50%;}
+.sb-name{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--gold2);line-height:1.5;}
+.sb-dept{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.sb-body{padding:10px 12px 16px;flex:1;display:flex;flex-direction:column;gap:2px;}
+
+/* Tabs */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;}
+.tab-btn{padding:9px;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;text-align:center;background:transparent;color:var(--text3);transition:all .18s;}
+.tab-btn.active{background:rgba(212,160,23,.12);border-color:var(--gold);color:var(--gold2);}
+.tab-btn:hover:not(.active){color:var(--text2);border-color:rgba(255,255,255,.15);}
+
+.tab-panel{display:none;flex-direction:column;gap:2px;}
+.tab-panel.active{display:flex;}
+
+.sec{font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--text3);text-transform:uppercase;padding:12px 6px 5px;display:flex;align-items:center;gap:8px;}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent);}
+
+.sb-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text2);background:transparent;width:100%;text-align:left;transition:all .18s;}
+.sb-btn:hover:not(:disabled){color:var(--text);}
+.sb-btn:disabled{opacity:.3;cursor:not-allowed;}
+.sb-btn .ico{font-size:16px;flex-shrink:0;}
+.sb-btn .stxt{display:flex;flex-direction:column;}
+.sb-btn .sn{font-size:9px;font-weight:700;letter-spacing:1px;color:inherit;opacity:.6;}
+.sb-btn .sl{font-size:12px;}
+
+.sb-btn.blue{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:#93c5fd;}
+.sb-btn.blue:hover:not(:disabled){background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.5);}
+.sb-btn.purple{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.25);color:#c4b5fd;}
+.sb-btn.purple:hover:not(:disabled){background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.5);}
+.sb-btn.green{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25);color:#6ee7b7;}
+.sb-btn.green:hover:not(:disabled){background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.5);}
+.sb-btn.orange{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25);color:#fdba74;}
+.sb-btn.orange:hover:not(:disabled){background:rgba(249,115,22,.2);border-color:rgba(249,115,22,.5);}
+.sb-btn.gold{background:rgba(212,160,23,.1);border-color:rgba(212,160,23,.3);color:var(--gold2);}
+.sb-btn.gold:hover:not(:disabled){background:rgba(212,160,23,.18);border-color:var(--gold);}
+.sb-btn.stop{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#fca5a5;}
+.sb-btn.stop:hover:not(:disabled){background:rgba(239,68,68,.18);}
+.sb-btn.plain{color:var(--text3);}
+.sb-btn.plain:hover:not(:disabled){color:var(--text);background:rgba(255,255,255,.04);}
+
+.range-row{display:flex;align-items:center;gap:6px;padding:3px 6px;}
+.rl{font-size:11px;color:var(--text3);white-space:nowrap;}
+.ri{flex:1;padding:6px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;color:var(--gold2);font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center;}
+.ri:focus{outline:none;border-color:var(--gold);}
+
+.fzone{border:1px dashed rgba(212,160,23,.2);border-radius:7px;padding:12px;text-align:center;cursor:pointer;font-size:12px;color:var(--text3);transition:all .2s;margin:2px 0;}
+.fzone:hover{border-color:var(--gold);color:var(--gold2);background:rgba(212,160,23,.04);}
+
+.db-info{padding:8px 10px;background:rgba(212,160,23,.06);border:1px solid rgba(212,160,23,.2);border-radius:7px;font-size:12px;color:#94a3b8;display:flex;justify-content:space-between;align-items:center;margin:2px 0;}
+.db-val{font-family:'JetBrains Mono',monospace;color:var(--gold2);}
+
+.div{height:1px;margin:6px 0;background:linear-gradient(90deg,transparent,var(--border),transparent);}
+
+/* RIGHT */
+.right{display:flex;flex-direction:column;overflow:hidden;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);}
+.sc{padding:14px 16px;background:rgba(12,16,24,.85);border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.sc:last-child{border-right:none;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sc:nth-child(1)::before{background:linear-gradient(90deg,var(--blue),var(--blue2));}
+.sc:nth-child(2)::before{background:linear-gradient(90deg,var(--purple),#a78bfa);}
+.sc:nth-child(3)::before{background:linear-gradient(90deg,var(--orange),#fb923c);}
+.sc:nth-child(4)::before{background:linear-gradient(90deg,var(--green),#34d399);}
+.sc:nth-child(5)::before{background:linear-gradient(90deg,var(--red),#f87171);}
+.sc-n{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;line-height:1;letter-spacing:1px;}
+.sc:nth-child(1) .sc-n{color:#60a5fa;}
+.sc:nth-child(2) .sc-n{color:#a78bfa;}
+.sc:nth-child(3) .sc-n{color:#fb923c;}
+.sc:nth-child(4) .sc-n{color:#34d399;}
+.sc:nth-child(5) .sc-n{color:#f87171;}
+.sc-l{font-size:9px;font-weight:600;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-top:4px;}
+
+/* PROGRESS */
+.prog{padding:10px 20px;background:rgba(12,16,24,.7);border-bottom:1px solid var(--border);}
+.prog-top{display:flex;justify-content:space-between;margin-bottom:6px;}
+.prog-task{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;}
+.prog-pct{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold2);}
+.pbar{height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue2),var(--cyan));transition:width .4s;width:0%;position:relative;overflow:hidden;}
+.pbar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:sh 1.8s linear infinite;}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+.prog-counts{display:flex;gap:16px;margin-top:6px;font-size:11px;font-family:'JetBrains Mono',monospace;}
+.c-ok{color:#34d399;} .c-err{color:#f87171;} .c-sk{color:var(--text3);} .c-tot{color:var(--text3);}
+
+/* LOG */
+.logw{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0 20px 14px;}
+.log-hd{display:flex;justify-content:space-between;align-items:center;padding:10px 0 8px;}
+.log-title{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--gold);}
+.log-meta{display:flex;align-items:center;gap:10px;}
+.log-cnt{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.log-clr{padding:4px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:4px;color:var(--text3);font-size:11px;cursor:pointer;transition:all .15s;}
+.log-clr:hover{color:var(--text);background:rgba(255,255,255,.08);}
+.logbox{flex:1;background:rgba(4,6,12,.95);border:1px solid var(--border);border-radius:8px;padding:12px 15px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.75;scrollbar-width:thin;scrollbar-color:#7a5a00 transparent;}
+.le{display:flex;gap:12px;padding:1px 0;border-radius:3px;}
+.le:hover{background:rgba(255,255,255,.02);}
+.le .ts{color:var(--text3);flex-shrink:0;font-size:11px;}
+.le.info .m{color:#8da8c8;} .le.warn .m{color:#fbbf24;} .le.error .m{color:#f87171;}
+
+/* MODAL */
+.ov{display:none;position:fixed;inset:0;background:rgba(4,6,12,.9);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.ov.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:28px;width:520px;max-width:96vw;box-shadow:0 0 80px rgba(212,160,23,.1);animation:mi .22s ease;}
+@keyframes mi{from{transform:scale(.95) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;letter-spacing:3px;color:var(--gold2);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.mf{margin-bottom:13px;}
+.mf label{display:block;font-size:10px;font-weight:600;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:5px;}
+.mf input{width:100%;padding:9px 13px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;}
+.mf input:focus{outline:none;border-color:var(--gold);}
+.mbtns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.mbtn{padding:9px 20px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;border:1px solid;transition:all .18s;}
+.mbtn.cancel{background:transparent;border-color:var(--border);color:var(--text2);}
+.mbtn.save{background:linear-gradient(135deg,#b8860b,var(--gold));border-color:var(--gold2);color:#0a0800;font-weight:700;}
+.mbtn.save:hover{filter:brightness(1.15);}
+
+::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#7a5a00;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<header class="hdr">
+  <div class="hl">
+    <div class="hl-emb">
+      <img src="/static/emblem.png" alt="" onerror="this.style.display='none'">
+    </div>
+    <div class="hl-t">
+      <div class="t1">КИБЕРНАДЗОР</div>
+      <div class="t2">МВД Республики Казахстан · Система автоматизации</div>
+    </div>
+  </div>
+  <div class="hr">
+    <div class="badge idle" id="badge"><div class="dot"></div><span id="badgeTxt">ГОТОВ</span></div>
+    <div class="clk" id="clk">--:--:--</div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sb">
+    <div class="sb-top">
+      <div class="sb-emb">
+        <img src="/static/emblem.png" alt="" onerror="this.style.display='none'">
+      </div>
+      <div class="sb-name">МВД Республики Казахстан</div>
+      <div class="sb-dept">Департамент кибербезопасности</div>
+    </div>
+
+    <div class="sb-body">
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('auto')">🌐 Авто режим</button>
+        <button class="tab-btn" onclick="switchTab('excel')">📊 Excel файл</button>
+      </div>
+
+      <!-- TAB 1: AUTO -->
+      <div class="tab-panel active" id="tab-auto">
+
+        <div class="sec">Шаг 1 — Источники</div>
+        <button class="sb-btn blue" onclick="doFetch()">
+          <span class="ico">📥</span>
+          <span class="stxt"><span class="sn">ШАГ 1</span><span class="sl">Собрать ссылки (OpenPhish + PhishTank + URLhaus)</span></span>
+        </button>
+        <div class="fzone" onclick="document.getElementById('fi').click()" ondrop="handleDrop(event)" ondragover="event.preventDefault()">
+          📂 Или загрузи свой TXT файл
+          <input type="file" id="fi" accept=".txt" style="display:none" onchange="uploadTxt(this.files[0])">
+        </div>
+
+        <div class="sec">Шаг 2 — Проверка и скриншоты</div>
+        <div class="range-row">
+          <span class="rl">С:</span><input type="number" class="ri" id="cFrom" value="1">
+          <span class="rl">По:</span><input type="number" class="ri" id="cTo" value="9999">
+        </div>
+        <button class="sb-btn purple" onclick="doCheck()">
+          <span class="ico">🔍</span>
+          <span class="stxt"><span class="sn">ШАГ 2</span><span class="sl">Проверить через VT + GSB и сделать скриншоты</span></span>
+        </button>
+
+        <div class="sec">Шаг 3 — Загрузка</div>
+        <div class="range-row">
+          <span class="rl">С:</span><input type="number" class="ri" id="uFrom" value="1">
+          <span class="rl">По:</span><input type="number" class="ri" id="uTo" value="9999">
+        </div>
+        <button class="sb-btn green" onclick="doUpload()">
+          <span class="ico">🚀</span>
+          <span class="stxt"><span class="sn">ШАГ 3</span><span class="sl">Загрузить в Кибернадзор</span></span>
+        </button>
+
+        <div class="sec">Всё сразу</div>
+        <button class="sb-btn gold" onclick="doAuto()">
+          <span class="ico">⚡</span>
+          <span class="stxt"><span class="sn">АВТО</span><span class="sl">Шаги 1 → 2 → 3 автоматически</span></span>
+        </button>
+
+      </div>
+
+      <!-- TAB 2: EXCEL -->
+      <div class="tab-panel" id="tab-excel">
+
+        <div class="sec">Загрузить Excel</div>
+        <div class="fzone" onclick="document.getElementById('excelInput').click()" ondrop="handleExcelDrop(event)" ondragover="event.preventDefault()">
+          📊 Перетащи Excel файл (оперативная сводка)
+          <br><span style="font-size:10px;opacity:.6;margin-top:4px;display:block">Колонка: "Ссылка, сайт, аккаунт мошенника"</span>
+          <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none" onchange="uploadExcel(this.files[0])">
+        </div>
+
+        <div class="sec">Действие</div>
+        <button class="sb-btn orange" onclick="doExcelProcess()">
+          <span class="ico">🔄</span>
+          <span class="stxt"><span class="sn">ОБРАБОТАТЬ</span><span class="sl">Скриншот аккаунтов + загрузить в Кибернадзор</span></span>
+        </button>
+
+        <div id="excelStatus" style="display:none;padding:10px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:7px;font-size:12px;color:#fdba74;margin-top:4px;"></div>
+
+        <div class="sec">Импорт базы</div>
+        <div class="fzone" onclick="document.getElementById('importInput').click()">
+          📥 Импортировать уже загруженные URL из Excel
+          <input type="file" id="importInput" accept=".xlsx" style="display:none" onchange="importExcel(this.files[0])">
+        </div>
+
+      </div>
+
+      <!-- ОБЩИЕ КНОПКИ -->
+      <div class="div" style="margin-top:8px"></div>
+
+      <div class="db-info">
+        <span>В базе URL:</span>
+        <span class="db-val" id="dbSize">—</span>
+      </div>
+
+      <button class="sb-btn stop" id="stopBtn" onclick="doStop()" disabled>
+        <span class="ico">⏹</span><span class="sl">Остановить задачу</span>
+      </button>
+
+      <div class="div"></div>
+      <button class="sb-btn plain" onclick="openSettings()"><span class="ico">⚙️</span><span class="sl">Настройки</span></button>
+      <button class="sb-btn plain" onclick="clearLog()"><span class="ico">🗑️</span><span class="sl">Очистить журнал</span></button>
+
+    </div>
+  </aside>
+
+  <div class="right">
+    <div class="stats">
+      <div class="sc"><div class="sc-n" id="st1">0</div><div class="sc-l">Ссылок собрано</div></div>
+      <div class="sc"><div class="sc-n" id="st2">0</div><div class="sc-l">Проверено</div></div>
+      <div class="sc"><div class="sc-n" id="st3">0</div><div class="sc-l">Опасных</div></div>
+      <div class="sc"><div class="sc-n" id="st4">0</div><div class="sc-l">Скриншотов</div></div>
+      <div class="sc"><div class="sc-n" id="st5">0</div><div class="sc-l">Загружено</div></div>
+    </div>
+
+    <div class="prog">
+      <div class="prog-top">
+        <span class="prog-task" id="pTask">ОЖИДАНИЕ</span>
+        <span class="prog-pct" id="pPct">0%</span>
+      </div>
+      <div class="pbar"><div class="pbar-fill" id="pFill"></div></div>
+      <div class="prog-counts">
+        <span class="c-ok">✓ OK: <span id="cOk">0</span></span>
+        <span class="c-err">✗ Ошибок: <span id="cErr">0</span></span>
+        <span class="c-sk">↷ Пропущено: <span id="cSk">0</span></span>
+        <span class="c-tot">∑ Всего: <span id="cTot">0</span></span>
+      </div>
+    </div>
+
+    <div class="logw">
+      <div class="log-hd">
+        <span class="log-title">Журнал операций</span>
+        <div class="log-meta">
+          <span class="log-cnt" id="logCnt">0 записей</span>
+          <button class="log-clr" onclick="clearLog()">Очистить</button>
+        </div>
+      </div>
+      <div class="logbox" id="logBox">
+        <div class="le info"><span class="ts">--:--:--</span><span class="m">🛡️ Система инициализирована. Выбери режим работы в боковой панели.</span></div>
+        <div class="le info"><span class="ts">--:--:--</span><span class="m">🌐 Авто режим — собирает ссылки с OpenPhish/PhishTank/URLhaus, проверяет и загружает.</span></div>
+        <div class="le info"><span class="ts">--:--:--</span><span class="m">📊 Excel режим — загружаешь оперативную сводку, делает скриншоты аккаунтов и загружает.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="ov" id="ov">
+  <div class="modal">
+    <div class="modal-title">⚙ НАСТРОЙКИ СИСТЕМЫ</div>
+    <div class="mf"><label>Папка скриншотов</label><input id="cs" type="text"></div>
+    <div class="mf"><label>Папка данных (CSV)</label><input id="cd" type="text"></div>
+    <div class="mf"><label>Файл auth.json</label><input id="ca" type="text"></div>
+    <div class="mf"><label>VirusTotal API Key</label><input id="cvt" type="password"></div>
+    <div class="mf"><label>Google Safe Browsing API Key</label><input id="cg" type="password"></div>
+    <div class="mbtns">
+      <button class="mbtn cancel" onclick="closeSettings()">Отмена</button>
+      <button class="mbtn save" onclick="saveSettings()">💾 Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Clock ──
+setInterval(()=>{
+  document.getElementById('clk').textContent =
+    new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+// ── Tabs ──
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', (i===0&&t==='auto')||(i===1&&t==='excel')));
+  document.getElementById('tab-auto').classList.toggle('active', t==='auto');
+  document.getElementById('tab-excel').classList.toggle('active', t==='excel');
+}
+
+// ── Polling ──
+const taskNames = {
+  fetch:'ШАГ 1 — СБОР ССЫЛОК',
+  check:'ШАГ 2 — ПРОВЕРКА И СКРИНШОТЫ',
+  upload:'ШАГ 3 — ЗАГРУЗКА В КИБЕРНАДЗОР',
+  auto:'АВТО РЕЖИМ',
+  excel:'ОБРАБОТКА EXCEL',
+};
+let logLen = 0;
+
+async function poll() {
+  try {
+    const d = await fetch('/api/status').then(r=>r.json());
+    document.getElementById('badge').className='badge '+(d.running?'running':'idle');
+    document.getElementById('badgeTxt').textContent=d.running?(taskNames[d.task]||'РАБОТАЕТ'):'ГОТОВ';
+    document.getElementById('st1').textContent=d.links_count||0;
+    document.getElementById('st2').textContent=d.stats?.checked||0;
+    document.getElementById('st3').textContent=d.stats?.dangerous||0;
+    document.getElementById('st4').textContent=d.stats?.screens||0;
+    document.getElementById('st5').textContent=d.stats?.uploaded||0;
+    const pct=d.total>0?Math.round(d.done/d.total*100):0;
+    document.getElementById('pFill').style.width=pct+'%';
+    document.getElementById('pPct').textContent=pct+'%';
+    document.getElementById('pTask').textContent=d.running?(taskNames[d.task]||'ВЫПОЛНЯЕТСЯ'):'ОЖИДАНИЕ';
+    document.getElementById('cOk').textContent=d.ok||0;
+    document.getElementById('cErr').textContent=d.err||0;
+    document.getElementById('cSk').textContent=d.skip||0;
+    document.getElementById('cTot').textContent=d.total||0;
+    document.getElementById('stopBtn').disabled=!d.running;
+    if(d.stats?.db_size!==undefined) document.getElementById('dbSize').textContent=d.stats.db_size.toLocaleString();
+    if(d.log&&d.log.length>logLen){
+      const box=document.getElementById('logBox');
+      d.log.slice(logLen).forEach(e=>{
+        const div=document.createElement('div');
+        div.className=`le ${e.level||'info'}`;
+        div.innerHTML=`<span class="ts">[${e.ts}]</span><span class="m">${String(e.msg).replace(/</g,'&lt;')}</span>`;
+        box.appendChild(div);
+      });
+      box.scrollTop=box.scrollHeight;
+      logLen=d.log.length;
+      document.getElementById('logCnt').textContent=logLen+' записей';
+    }
+  } catch(e) {}
+}
+setInterval(poll,1000); poll();
+
+// ── Helpers ──
+const post=(url,body)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+
+// ── AUTO TAB ──
+async function doFetch(){await post('/api/fetch');logLen=0;}
+function uploadTxt(f){if(!f)return;const fd=new FormData();fd.append('file',f);fetch('/api/upload_txt',{method:'POST',body:fd});logLen=0;}
+function handleDrop(e){e.preventDefault();uploadTxt(e.dataTransfer.files[0]);}
+async function doCheck(){await post('/api/check_and_screenshot',{from:+cFrom.value,to:+cTo.value});logLen=0;}
+async function doUpload(){await post('/api/upload_knadzor',{from:+uFrom.value,to:+uTo.value});logLen=0;}
+async function doAuto(){await post('/api/auto');logLen=0;}
+
+// ── EXCEL TAB ──
+let excelLoaded = false;
+
+function uploadExcel(f) {
+  if(!f) return;
+  const fd = new FormData();
+  fd.append('file', f);
+  const status = document.getElementById('excelStatus');
+  status.style.display='block';
+  status.textContent='⏳ Загружаю файл...';
+  fetch('/api/load_excel',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.ok){
+        excelLoaded = true;
+        status.textContent=`✅ Загружено: ${d.total} записей, новых для обработки: ${d.new_count}`;
+        logLen=0;
+      } else {
+        status.textContent=`❌ Ошибка: ${d.error}`;
+      }
+    });
+}
+function handleExcelDrop(e){e.preventDefault();uploadExcel(e.dataTransfer.files[0]);}
+
+async function doExcelProcess() {
+  if(!excelLoaded){
+    alert('Сначала загрузи Excel файл!');
+    return;
+  }
+  await post('/api/excel_process');
+  logLen=0;
+}
+
+function importExcel(f) {
+  if(!f) return;
+  const fd = new FormData();
+  fd.append('file', f);
+  fetch('/api/import_excel',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.ok) alert(`✅ Импортировано: ${d.added} новых URL\nВсего в базе: ${d.total}`);
+      else alert(`❌ Ошибка: ${d.error}`);
+    });
+}
+
+// ── COMMON ──
+async function doStop(){await post('/api/stop');}
+async function clearLog(){
+  logLen=0;
+  document.getElementById('logBox').innerHTML='';
+  document.getElementById('logCnt').textContent='0 записей';
+  await post('/api/clear_log');
+}
+
+async function openSettings(){
+  const c=await fetch('/api/config').then(r=>r.json());
+  document.getElementById('cs').value=c.screens_dir||'';
+  document.getElementById('cd').value=c.data_dir||'';
+  document.getElementById('ca').value=c.auth_file||'';
+  document.getElementById('cvt').value=c.virustotal_key||'';
+  document.getElementById('cg').value=c.gsb_key||'';
+  document.getElementById('ov').classList.add('open');
+}
+function closeSettings(){document.getElementById('ov').classList.remove('open');}
+async function saveSettings(){
+  await post('/api/config',{
+    screens_dir:document.getElementById('cs').value,
+    data_dir:document.getElementById('cd').value,
+    auth_file:document.getElementById('ca').value,
+    virustotal_key:document.getElementById('cvt').value,
+    gsb_key:document.getElementById('cg').value,
+  });
+  closeSettings();
+}
+document.getElementById('ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSettings();});
+</script>
+</body>
+</html>
